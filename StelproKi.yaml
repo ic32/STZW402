@@ -54,6 +54,17 @@ blueprint:
               filter:
                 - domain: sensor
                   device_class: temperature
+        temp_scale:
+          name: Temperature Scale 
+          description: |
+            Whether outdoor temp should be reported in °C or °F
+          selector:
+            select:
+              options:
+              - label: Celsius
+              value: 0
+              - label: Fahrenheit
+              value: 1
     output_thermostats:
       name: Stelpro Ki Z-Wave (STZW402+) Thermostat(s) selection
       description: |
@@ -88,6 +99,6 @@ actions:
       method_name: sendReport
       parameters:
         - 1
-        - 0
+        - !input temp_scale
         - "{{ states(outdoor_temp) | round(2, default=99) }}"
       endpoint: 0
