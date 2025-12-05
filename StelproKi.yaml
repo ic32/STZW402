@@ -89,5 +89,12 @@ actions:
       parameters:
         - 1
         - 0
-        - "{{ states(outdoor_temp) | round(2, default=99) }}"
+        - >-
+          {% set sens_val = states(outdoor_temp) | float(99) %}
+          {% set sens_unit = state_attr(outdoor_temp, 'unit_of_measurement') %}
+          {% if sens_unit == '°F' %}
+            {{ ((sens_val - 32) * 5/9) | round(2) }}
+          {% else %}
+            {{ sens_val | round(2) }}
+          {% endif %}
       endpoint: 0
