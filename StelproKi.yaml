@@ -80,6 +80,18 @@ triggers:
 actions:
   - variables:
       outdoor_temp: !input out_temp
+      temp_value: "{{ states(outdoor_temp) | float(default=0) }}"
+      temp_unit: "{{ state_attr(outdoor_temp, 'unit_of_measurement') }}"
+      # Convert to Celsius if needed
+      temp_celsius: |
+        {% if temp_unit in ['°F', 'F', 'Fahrenheit'] %}
+          {{ ((temp_value - 32) * 5 / 9) | round(2, default=99) }}
+        {% elif temp_unit in ['°C', 'C', 'Celsius', 'K', 'Kelvin'] %}
+          {{ temp_value | round(2, default=99) }}
+        {% else %}
+          {# Default to Celsius if unit is unknown #}
+          {{ temp_value | round(2, default=99) }}
+        {% endif %}
   - action: zwave_js.invoke_cc_api
     target:
       entity_id: !input target_climate
@@ -89,12 +101,5 @@ actions:
       parameters:
         - 1
         - 0
-        - >-
-          {% set sens_val = states(outdoor_temp) | float(99) %}
-          {% set sens_unit = state_attr(outdoor_temp, 'unit_of_measurement') %}
-          {% if sens_unit == '°F' %}
-            {{ ((sens_val - 32) * 5/9) | round(2) }}
-          {% else %}
-            {{ sens_val | round(2) }}
-          {% endif %}
+        - "{{ temp_celsius }}"
       endpoint: 0
